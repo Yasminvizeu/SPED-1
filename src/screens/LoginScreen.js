@@ -6,6 +6,8 @@ import Button from "../components/Button";
 import PasswordInput from "../components/PasswordInput";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/api"; // Importando o serviço Axios
+import { user_login } from "../api/user_api";
+import { AsyncStorage } from "react-native";
 
 const LoginScreen = () => {
   const navigation = useNavigation();
@@ -13,27 +15,19 @@ const LoginScreen = () => {
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    if (username === "123" && password === "123") {
-      // Permitindo login com o CPF "123" e senha "123"
-      console.log("Login bem-sucedido como usuário padrão");
-      navigation.replace("Home");
+    const checkPassword = checkPasswordValidity(password);
+    if (!checkPassword) {
+      user_login({
+        username: username,
+        password: password
+      }).then((result) => {
+        if (result.status == 200) {
+          AsyncStorage.setItem("AccessToken", result.data.token)
+          navigation.replace("home")
+        }
+      })
     } else {
-      // Fazendo a solicitação POST para o endpoint de login usando o serviço Axios
-      api
-        .post("/auth/login", {
-          cpf: username,
-          pass: password,
-        })
-        .then((response) => {
-          // Se a solicitação for bem-sucedida, você pode redirecionar o usuário para a próxima tela ou executar outras ações necessárias
-          console.log("Login bem-sucedido:", response.data);
-          navigation.replace("Home"); // Redireciona para a tela Home após o login
-        })
-        .catch((error) => {
-          // Se ocorrer algum erro durante a solicitação, você pode exibir uma mensagem de erro ao usuário
-          console.error("Erro ao fazer login:", error);
-          Alert.alert("Erro", "Credenciais inválidas");
-        });
+      alert(checkPassword);
     }
   };
 
